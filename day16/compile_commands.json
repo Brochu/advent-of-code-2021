@@ -1,0 +1,15 @@
+[
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-std=c++17",
+            "-g",
+            "-o",
+            "solve",
+            "main.cpp"
+        ],
+        "directory": "/mnt/c/Users/Alex/Documents/advent-of-code/2021/day16",
+        "file": "main.cpp"
+    }
+]
