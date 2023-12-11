@@ -12,9 +12,14 @@ std::vector<char*> split_char(char *str, const std::string &separator);
 
 template<typename Fn>
 void enum_str(std::string &&str, const std::string &separator, Fn func) {
+    enum_char(str.data(), separator, func);
+}
+
+template<typename Fn>
+void enum_char(char *str, const std::string &separator, Fn func) {
     char *token, *nextt = nullptr;
 
-    token = strtok_s(str.data(), separator.c_str(), &nextt);
+    token = strtok_s(str, separator.c_str(), &nextt);
     while(token) {
         func(token);
         token = strtok_s(NULL, separator.c_str(), &nextt);
