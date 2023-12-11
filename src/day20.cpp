@@ -1,6 +1,7 @@
 #include "day.h"
 #include "parsing.h"
 
+#include <climits>
 #include <span>
 
 namespace Solution {
@@ -48,21 +49,51 @@ void find_kernel(i32 x, i32 y, Pos out[9]) {
     out[8] = { x + 1, y + 1 };
 }
 
-std::string part1(char *algo, std::span<Pos> space) {
-    usize count = 0;
-    debug_space(space);
+std::vector<Pos> enhance_img(char *algo, std::vector<Pos> &img) {
+    i32 minx = INT_MAX, miny = INT_MAX;
+    i32 maxx = INT_MIN, maxy = INT_MIN;
+    for (Pos &p : img) {
+        //printf("(%i, %i)\n", p.x, p.y);
 
-    Pos k[9];
-    find_kernel(2, 2, k);
-    usize offset = 0;
-    for (i32 i = 0; i < 9; i++) {
-        offset <<= 1;
-        if (find_at(space, k[i].x, k[i].y) == '#') {
-            offset++;
+        if (p.x < minx) minx = p.x;
+        if (p.y < miny) miny = p.y;
+        if (p.x > maxx) maxx = p.x;
+        if (p.y > maxy) maxy = p.y;
+    }
+    //printf("MIN = (%i, %i)\n", minx, miny);
+    //printf("MAX = (%i, %i)\n", maxx, maxy);
+
+    std::vector<Pos> newImg;
+    for (i32 i = miny - 1; i <= maxy + 1; i++) {
+        for (i32 j = minx - 1; j <= maxx + 1; j++) {
+            Pos k[9];
+            find_kernel(j, i, k);
+            usize offset = 0;
+            for (i32 i = 0; i < 9; i++) {
+                offset <<= 1;
+                if (find_at(img, k[i].x, k[i].y) == '#') {
+                    offset++;
+                }
+            }
+            //printf("OFFSET = %lld\n", offset);
+            if (algo[offset] == '#') {
+                newImg.push_back({ j, i });
+            }
         }
     }
-    printf("OFFSET = %lld\n", offset);
-    return std::to_string(count);
+    return newImg;
+}
+
+std::string part1(char *algo, std::vector<Pos> &img) {
+    usize count = 0;
+    //debug_space(img);
+    //printf("------------\n");
+    std::vector<Pos> newImg = enhance_img(algo, img);
+    newImg = enhance_img(algo, newImg);
+    //debug_space(newImg);
+    //printf("------------\n");
+
+    return std::to_string(newImg.size());
 }
 
 std::string part2(char *algo, std::span<Pos> space) {
