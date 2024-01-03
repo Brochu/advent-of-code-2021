@@ -1,120 +1,122 @@
 #include "day.h"
 #include "parsing.h"
 
-#include <climits>
 #include <span>
 
 namespace Solution {
 
-#define DEMO 1
+#define DEMO 0
 #if DEMO == 1 // ------------------------------------
 #define FILE_PATH ".\\inputs\\day20_demo1.txt"
-#define IMG_SIZE 5
 #else // ------------------------------------
 #define FILE_PATH ".\\inputs\\day20.txt"
-#define IMG_SIZE 100
 #endif // ------------------------------------
+#define FOUND(l, n) (std::find(std::begin(l), std::end(l), n) != std::end(l))
 
-struct Pos {
-    i32 x;
-    i32 y;
-};
-char find_at(std::span<Pos> array, i32 x, i32 y) {
-    for (Pos &elem : array) {
-        if (elem.x == x && elem.y == y) {
-            return '#';
-        }
-    }
-    return '.';
+struct Pos { i32 x; i32 y; };
+bool operator==(const Pos &left, const Pos &right) {
+    return left.x == right.x && left.y == right.y;
 }
 
-void debug_space(std::span<Pos> space) {
-    for (i32 i = -5; i <= 9; i++) {
-        for (i32 j = -5; j <= 9; j++) {
-            printf("%c", find_at(space, j, i));
+struct Img {
+    std::vector<Pos> pos;
+    Pos min { INT32_MAX, INT32_MAX };
+    Pos max { INT32_MIN, INT32_MIN };
+};
+void debug_img(Img &img) {
+    const Pos test { 0, 0 };
+    auto it = std::find(img.pos.begin(), img.pos.end(), test);
+    for (i32 i = img.min.y - 5; i <= img.max.y + 5; i++) {
+        for (i32 j = img.min.x - 5; j <= img.max.x + 5; j++) {
+            const Pos p { j, i };
+            if (FOUND(img.pos, p)) printf("#");
+            else printf(".");
         }
         printf("\n");
     }
 }
-
-void find_kernel(i32 x, i32 y, Pos out[9]) {
-    out[0] = { x - 1, y - 1 };
-    out[1] = { x - 0, y - 1 };
-    out[2] = { x + 1, y - 1 };
-    out[3] = { x - 1, y - 0 };
-    out[4] = { x - 0, y - 0 };
-    out[5] = { x + 1, y - 0 };
-    out[6] = { x - 1, y + 1 };
-    out[7] = { x - 0, y + 1 };
-    out[8] = { x + 1, y + 1 };
-}
-
-std::vector<Pos> enhance_img(char *algo, std::vector<Pos> &img) {
-    i32 minx = INT_MAX, miny = INT_MAX;
-    i32 maxx = INT_MIN, maxy = INT_MIN;
-    for (Pos &p : img) {
-        //printf("(%i, %i)\n", p.x, p.y);
-
-        if (p.x < minx) minx = p.x;
-        if (p.y < miny) miny = p.y;
-        if (p.x > maxx) maxx = p.x;
-        if (p.y > maxy) maxy = p.y;
+usize calc_offset(Img &img, Pos p) {
+    //debug_img(img);
+    Pos kern[9] {
+        { p.x-1, p.y-1 }, { p.x+0, p.y-1 }, { p.x+1, p.y-1 },
+        { p.x-1, p.y+0 }, { p.x+0, p.y+0 }, { p.x+1, p.y+0 },
+        { p.x-1, p.y+1 }, { p.x+0, p.y+1 }, { p.x+1, p.y+1 },
+    };
+    usize offset = 0;
+    for (Pos &k : kern) {
+        offset <<= 1;
+        if (FOUND(img.pos, k)) offset++;
     }
-    //printf("MIN = (%i, %i)\n", minx, miny);
-    //printf("MAX = (%i, %i)\n", maxx, maxy);
-
-    std::vector<Pos> newImg;
-    for (i32 i = miny - 1; i <= maxy + 1; i++) {
-        for (i32 j = minx - 1; j <= maxx + 1; j++) {
-            Pos k[9];
-            find_kernel(j, i, k);
-            usize offset = 0;
-            for (i32 i = 0; i < 9; i++) {
-                offset <<= 1;
-                if (find_at(img, k[i].x, k[i].y) == '#') {
-                    offset++;
-                }
-            }
-            //printf("OFFSET = %lld\n", offset);
-            if (algo[offset] == '#') {
-                newImg.push_back({ j, i });
+    return offset;
+}
+Img init_img(char *imgstr) {
+    Img img;
+    std::vector<char*> lines = Parse::split_char(imgstr, "\n");
+    for (i32 i = 0; i < lines.size(); i++) {
+        for (i32 j = 0; j < strlen(lines[i]); j++) {
+            if (lines[i][j] == '#') {
+                img.pos.push_back({ j, i });
+                if (j < img.min.x) img.min.x = j;
+                if (j > img.max.x) img.max.x = j;
+                if (i < img.min.y) img.min.y = i;
+                if (i > img.max.y) img.max.y = i;
             }
         }
     }
-    return newImg;
+    return img;
+}
+void enhance_img(Img &img, std::span<char> algo) {
+    std::vector<Pos> newimg;
+
+    for (i32 i = img.min.y - 1; i <= img.max.y + 1; i++) {
+        for (i32 j = img.min.x - 1; j <= img.max.x + 1; j++) {
+            const Pos p { j, i };
+            const usize idx = calc_offset(img, p);
+            if (algo[idx] == '#') {
+                newimg.push_back(p);
+            }
+        }
+    }
+    img.pos = newimg;
+    img.min.x--;
+    img.min.y--;
+    img.max.x++;
+    img.max.y++;
 }
 
-std::string part1(char *algo, std::vector<Pos> &img) {
-    usize count = 0;
-    //debug_space(img);
-    //printf("------------\n");
-    std::vector<Pos> newImg = enhance_img(algo, img);
-    newImg = enhance_img(algo, newImg);
-    //debug_space(newImg);
-    //printf("------------\n");
+i32 part1(std::span<char> algo, Img &img) {
+    //printf("[ALGO (%lld)]\n", algo.size());
+    //for (char &c : algo) {
+    //    printf("%c", c);
+    //}
+    //printf("\n\n");
 
-    return std::to_string(newImg.size());
+    debug_img(img);
+    enhance_img(img, algo);
+    printf("-----------------\n");
+    debug_img(img);
+    enhance_img(img, algo);
+    printf("-----------------\n");
+    debug_img(img);
+
+    return img.pos.size();
 }
 
-std::string part2(char *algo, std::span<Pos> space) {
-    usize count = 0;
-    return std::to_string(count);
+i32 part2() {
+    i32 count = 0;
+    return count;
 }
 
 i32 run(std::string *part1_out, std::string *part2_out) {
     std::string in = INCLUDE_STR(FILE_PATH);
-    std::vector<char*> inputs = Parse::split_str(std::move(in), "\n\n");
+    char *algostr = nullptr;
+    char *imgstr = nullptr;
+    Parse::split_once(in.data(), "\n\n", &algostr, &imgstr);
 
-    std::vector<char*> imgData = Parse::split_char(inputs[1], "\n");
-    std::vector<Pos> space;
-    for (i32 i = 0; i < imgData.size(); i++) {
-        for (i32 j = 0; j < strlen(imgData[i]); j++) {
-            if (imgData[i][j] == '#') { space.push_back({ j, i }); }
-        }
-    }
-
-    *part1_out = part1(inputs[0], space);
-    *part2_out = part2(inputs[0], space);
+    std::span<char> algo { algostr, strlen(algostr) };
+    Img img = init_img(imgstr);
+    *part1_out = std::to_string(part1(algo, img));
+    *part2_out = std::to_string(part2());
 
     return 0;
 }
