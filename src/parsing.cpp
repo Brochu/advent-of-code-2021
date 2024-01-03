@@ -44,4 +44,9 @@ std::vector<char*> split_char(char *str, const std::string &separator) {
     return { tokens.begin(), end };
 }
 
+void split_once(char *str, const std::string &separator, char **first, char **rest) {
+    *first = strtok_s(str, separator.c_str(), rest);
+    for (int i = 0; i < separator.size() - 1; i++) { (*rest)++; }
+}
+
 }
