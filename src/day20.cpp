@@ -5,7 +5,7 @@
 
 namespace Solution {
 
-#define DEMO 0
+#define DEMO 1
 #if DEMO == 1 // ------------------------------------
 #define FILE_PATH ".\\inputs\\day20_demo1.txt"
 #else // ------------------------------------
@@ -67,6 +67,8 @@ Img init_img(char *imgstr) {
 }
 void enhance_img(Img &img, std::span<char> algo) {
     std::vector<Pos> newimg;
+    Pos min { INT32_MAX, INT32_MAX };
+    Pos max { INT32_MIN, INT32_MIN };
 
     for (i32 i = img.min.y - 1; i <= img.max.y + 1; i++) {
         for (i32 j = img.min.x - 1; j <= img.max.x + 1; j++) {
@@ -74,14 +76,16 @@ void enhance_img(Img &img, std::span<char> algo) {
             const usize idx = calc_offset(img, p);
             if (algo[idx] == '#') {
                 newimg.push_back(p);
+                if (j < min.x) min.x = j;
+                if (j > max.x) max.x = j;
+                if (i < min.y) min.y = i;
+                if (i > max.y) max.y = i;
             }
         }
     }
     img.pos = newimg;
-    img.min.x--;
-    img.min.y--;
-    img.max.x++;
-    img.max.y++;
+    img.min = min;
+    img.max = max;
 }
 
 i32 part1(std::span<char> algo, Img &img) {
