@@ -7,7 +7,7 @@ namespace Solution {
 
 #define DEMO 1
 #if DEMO == 1 // ------------------------------------
-#define FILE_PATH ".\\inputs\\day24_demo1.txt"
+#define FILE_PATH ".\\inputs\\day24_demo3.txt"
 #else // ------------------------------------
 #define FILE_PATH ".\\inputs\\day24.txt"
 #endif // ------------------------------------
@@ -38,17 +38,44 @@ bool is_done(Instance &inst) {
 }
 void step(Instance &inst) {
     Instruction &instr = inst.prog[inst.pc++];
-    printf("[%s] %i %lld (%c)\n", instr.op, instr.a, instr.b, instr.litteral ? 'Y' : 'N');
+    //printf("[%s] %i %lld (%c)\n", instr.op, instr.a, instr.b, instr.litteral ? 'Y' : 'N');
+    i64 val = instr.litteral ? instr.b : inst.registers[instr.b];
+
+    if (strcmp(instr.op, "inp") == 0) {
+        i64 in = std::stoll(inst.inputs[inst.ic++]);
+        inst.registers[instr.a] = in;
+    }
+    else if (strcmp(instr.op, "add") == 0) {
+        inst.registers[instr.a] += val;
+    }
+    else if (strcmp(instr.op, "mul") == 0) {
+        inst.registers[instr.a] *= val;
+    }
+    else if (strcmp(instr.op, "div") == 0) {
+        inst.registers[instr.a] /= val;
+    }
+    else if (strcmp(instr.op, "mod") == 0) {
+        inst.registers[instr.a] %= val;
+    }
+    else if (strcmp(instr.op, "eql") == 0) {
+        inst.registers[instr.a] = (inst.registers[instr.a] == val) ? 1 : 0;
+    }
 }
 
 i32 part1(std::span<Instruction> prog) {
-    std::vector<const char*> inputs { "1", "2", "3" };
+    std::vector<const char*> inputs { "1", "3", "5", "7", "9", "2", "4", "6", "8", "9", "9", "9", "9", "9" };
+    printf("[INPUTS] count=%lld: [", inputs.size());
+    for (const char *in : inputs) {
+        printf("'%s' ", in);
+    }
+    printf("]\n");
 
     Instance inst { {0, 0, 0, 0}, prog, 0, inputs, 0, };
     while(!is_done(inst)) {
         step(inst);
     }
 
+    debug_registers(inst);
     return 0;
 }
 
