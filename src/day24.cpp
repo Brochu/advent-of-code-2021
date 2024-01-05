@@ -7,7 +7,7 @@ namespace Solution {
 
 #define DEMO 1
 #if DEMO == 1 // ------------------------------------
-#define FILE_PATH ".\\inputs\\day24_demo3.txt"
+#define FILE_PATH ".\\inputs\\day24_demo4.txt"
 #else // ------------------------------------
 #define FILE_PATH ".\\inputs\\day24.txt"
 #endif // ------------------------------------
@@ -63,19 +63,30 @@ void step(Instance &inst) {
 }
 
 i32 part1(std::span<Instruction> prog) {
-    std::vector<const char*> inputs { "1", "3", "5", "7", "9", "2", "4", "6", "8", "9", "9", "9", "9", "9" };
-    printf("[INPUTS] count=%lld: [", inputs.size());
-    for (const char *in : inputs) {
-        printf("'%s' ", in);
-    }
-    printf("]\n");
+    //std::vector<const char*> inputs { "1", "3", "5", "7", "9", "2", "4", "6", "8", "9", "9", "9", "9", "9" };
+    std::string start { "99999999999999" };
+    std::string end { "11111111111111" };
+    printf("'%s'\n", start.c_str());
+    while (start != end) {
+        for (i32 i = start.size() - 1; i >= 0; i--) {
+            i8 val = (start[i] - '0') - 1;
+            start.data()[i] = val + '0';
 
-    Instance inst { {0, 0, 0, 0}, prog, 0, inputs, 0, };
-    while(!is_done(inst)) {
-        step(inst);
+            if (start.data()[i] == '0') {
+                start.data()[i] = '9';
+            } else {
+                break;
+            }
+        }
+        printf("'%s'\n", start.c_str());
     }
 
-    debug_registers(inst);
+    //Instance inst { {0, 0, 0, 0}, prog, 0, inputs, 0, };
+    //while(!is_done(inst)) {
+    //    step(inst);
+    //}
+
+    //debug_registers(inst);
     return 0;
 }
 

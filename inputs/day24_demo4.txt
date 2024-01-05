@@ -1,0 +1,2 @@
+inp w
+div w 2
