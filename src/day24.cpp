@@ -23,14 +23,32 @@ struct Instance {
     i64 registers[4]; // W, X, Y, Z
     std::span<Instruction> prog;
     i64 pc;
-    std::span<char*> inputs;
+    std::span<const char*> inputs;
     i64 ic;
 };
+void debug_registers(Instance &inst) {
+    printf("[REGISTERS]\n");
+    printf("  w=%lld\n", inst.registers[0]);
+    printf("  x=%lld\n", inst.registers[1]);
+    printf("  y=%lld\n", inst.registers[2]);
+    printf("  z=%lld\n", inst.registers[3]);
+}
+bool is_done(Instance &inst) {
+    return inst.pc >= inst.prog.size();
+}
+void step(Instance &inst) {
+    Instruction &instr = inst.prog[inst.pc++];
+    printf("[%s] %i %lld (%c)\n", instr.op, instr.a, instr.b, instr.litteral ? 'Y' : 'N');
+}
 
 i32 part1(std::span<Instruction> prog) {
-    for (Instruction &instr : prog) {
-        printf("[%s] %i %lld (%c)\n", instr.op, instr.a, instr.b, instr.litteral ? 'Y' : 'N');
+    std::vector<const char*> inputs { "1", "2", "3" };
+
+    Instance inst { {0, 0, 0, 0}, prog, 0, inputs, 0, };
+    while(!is_done(inst)) {
+        step(inst);
     }
+
     return 0;
 }
 
